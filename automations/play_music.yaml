@@ -6,7 +6,6 @@ triggers:
       - Play {requested_music} [on {player}]
 conditions: []
 actions:
-  - set_conversation_response: Maybe.
   - action: script.extract_media_player
     metadata: {}
     response_variable: mediaplayer
@@ -39,12 +38,15 @@ actions:
         target:
           entity_id: "{{ mediaplayer.mediaplayer }}"
     else:
-      - action: tts.cloud_say
+      - action: tts.speak
         metadata: {}
         data:
           cache: false
-          entity_id: "{{ mediaplayer.mediaplayer }}"
-          message: Searching for {{trigger.slots.requested_music}}
+          message: Searching for {{ trigger.slots.requested_music}}
+          media_player_entity_id: "{{ mediaplayer.mediaplayer }}"
+        target:
+          entity_id:
+            - tts.home_assistant_cloud
       - action: music_assistant.search
         metadata: {}
         data:
