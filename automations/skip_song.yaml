@@ -1,0 +1,19 @@
+alias: Skip to the next song
+description: ""
+triggers:
+  - trigger: conversation
+    command:
+      - (skip|next)
+    id: media_next
+conditions: []
+actions:
+  - action: script.extract_media_player
+    metadata: {}
+    response_variable: mediaplayer
+    data:
+      triggering_device_id: "{{trigger.user_input.device_id}}"
+  - action: media_player.media_next_track
+    target:
+      entity_id: "{{ mediaplayer.mediaplayer }}"
+  - set_conversation_response: Skipped song.
+mode: single
