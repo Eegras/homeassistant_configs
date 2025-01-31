@@ -1,0 +1,62 @@
+alias: Play music
+description: ""
+triggers:
+  - trigger: conversation
+    command:
+      - Play {requested_music} [on {player}]
+conditions: []
+actions:
+  - set_conversation_response: Maybe.
+  - action: script.extract_media_player
+    metadata: {}
+    response_variable: mediaplayer
+    data:
+      triggering_device_id: "{{trigger.user_input.device_id}}"
+  - if:
+      - condition: template
+        value_template: "{{trigger.slots.requested_music == \"music\"}}"
+    then:
+      - action: music_assistant.search
+        metadata: {}
+        data:
+          limit: 5
+          library_only: true
+          config_entry_id: 01JJSN13BVSDYJR92JVXZZE3GK
+          media_type:
+            - playlist
+          name: Liked Music
+        response_variable: music_result
+      - action: music_assistant.play_media
+        metadata: {}
+        data:
+          media_id: "{{ music_result.playlists[0].uri }}"
+        target:
+          entity_id: "{{ mediaplayer.mediaplayer }}"
+      - action: media_player.shuffle_set
+        metadata: {}
+        data:
+          shuffle: true
+        target:
+          entity_id: "{{ mediaplayer.mediaplayer }}"
+    else:
+      - action: tts.cloud_say
+        metadata: {}
+        data:
+          cache: false
+          entity_id: "{{ mediaplayer.mediaplayer }}"
+          message: Searching for {{trigger.slots.requested_music}}
+      - action: music_assistant.search
+        metadata: {}
+        data:
+          limit: 5
+          library_only: false
+          config_entry_id: 01JJSN13BVSDYJR92JVXZZE3GK
+          name: "{{ trigger.slots.requested_music }}"
+        response_variable: music_result
+      - action: music_assistant.play_media
+        metadata: {}
+        data:
+          media_id: "{{ music_result.tracks[0].uri }}"
+        target:
+          entity_id: "{{ mediaplayer.mediaplayer }}"
+mode: restart
