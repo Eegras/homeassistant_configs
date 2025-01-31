@@ -1,0 +1,18 @@
+alias: Unpause song
+description: ""
+triggers:
+  - trigger: conversation
+    command:
+      - (unpause|resume)
+conditions: []
+actions:
+  - action: script.extract_media_player
+    metadata: {}
+    response_variable: mediaplayer
+    data:
+      triggering_device_id: "{{trigger.user_input.device_id}}"
+  - action: media_player.media_play
+    target:
+      entity_id: "{{ mediaplayer.mediaplayer }}"
+  - set_conversation_response: Unpaused song.
+mode: single
