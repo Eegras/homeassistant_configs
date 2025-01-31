@@ -1,0 +1,32 @@
+alias: Stop Cleaning
+description: ""
+triggers:
+  - trigger: conversation
+    command:
+      - (stop|cancel) [house] (clean|vacuum)[ing]
+conditions: []
+actions:
+  - set_conversation_response: Cleaning stopped.
+  - data:
+      skip_condition: true
+    action: automation.trigger
+    enabled: true
+    target:
+      entity_id: automation.vacuum_preset_none
+  - data:
+      skip_condition: true
+    action: automation.trigger
+    enabled: true
+    target:
+      entity_id: automation.vacuum_pause_cleaning
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  - data:
+      skip_condition: true
+    action: automation.trigger
+    enabled: true
+    target:
+      entity_id: automation.vacuum_stop_cleaning
+mode: single
