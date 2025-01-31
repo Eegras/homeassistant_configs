@@ -1,0 +1,35 @@
+sequence:
+  - variables:
+      mediaplayer: |-
+        {% if desired_player %}
+          {% set target_player=(expand(states.media_player) 
+              | selectattr('name', 'search', desired_player,  ignorecase=true) 
+              | selectattr('attributes.supported_features', 'ge', 32768)
+              | list)[0].entity_id %}
+        {% else %}
+          {% set target_player=(expand(integration_entities('music_assistant'))  | selectattr('name',
+          'contains', 
+              (expand(device_entities(triggering_device_id)) 
+               | selectattr('domain', 'contains', 'media_player') 
+               | map(attribute='name') 
+              | list)[0]) 
+          | map(attribute='entity_id')  | list)[0] %}
+        {% endif %}
+        {{ { "mediaplayer": target_player } }}
+  - stop: ""
+    response_variable: mediaplayer
+fields:
+  triggering_device_id:
+    selector:
+      text: {}
+    name: Triggering Device ID
+    required: true
+    description: This is the triggering device. Usually "{{trigger.user_input.device_id}}"
+  desired_player:
+    selector:
+      text: {}
+    name: Desired Player
+    required: false
+    description: If the user wants another player, put the name of the player here.
+alias: Extract Media Player
+description: ""
