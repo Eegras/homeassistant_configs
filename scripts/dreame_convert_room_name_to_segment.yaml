@@ -1,0 +1,30 @@
+sequence:
+  - variables:
+      selected_room: >-
+        {%- set list_of_rooms_to_clean = namespace(items=[])-%} {%- set
+        valid_rooms=state_attr(vacuum_object,'rooms')[state_attr(vacuum_object,'selected_map')]
+        -%} {%- for room in valid_rooms -%}
+          {%- if room['name'].lower() in desired_room.lower() -%}
+            {%- set list_of_rooms_to_clean.did_something = True %}
+            {%- if room['id']|string not in list_of_rooms_to_clean.items %}
+              {{ room }}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      result:
+        room: "{{selected_room}}"
+  - stop: Stopping
+    response_variable: result
+alias: Dreame Convert Room Name to Segment
+description: ""
+fields:
+  vacuum_object:
+    selector:
+      entity: {}
+    name: Vacuum
+    required: true
+    default: vacuum.rosey
+  desired_room:
+    selector:
+      text: {}
+    name: Desired Room
