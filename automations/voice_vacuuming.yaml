@@ -1,5 +1,5 @@
 alias: Voice vacuuming
-description: Allows HAVPE to parse vacuum intent.
+description: Allows HAVPE to parse vacuum intent. Requires /scripts/dreame_add_segment_to_list.yaml and /scripts/dreame_convert_room_name_to_segment.yaml
 triggers:
   - trigger: conversation
     command:
