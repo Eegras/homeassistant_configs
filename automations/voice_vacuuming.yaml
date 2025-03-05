@@ -1,0 +1,95 @@
+alias: Voice vacuuming
+description: Allows HAVPE to parse vacuum intent.
+triggers:
+  - trigger: conversation
+    command:
+      - (vacuum|clean) [the] {rooms}
+conditions: []
+actions:
+  - variables:
+      the_vacuum: vacuum.rosey
+  - set_conversation_response: Processing...
+  - if:
+      - condition: not
+        conditions:
+          - condition: template
+            value_template: "{{ is_state(the_vacuum, 'Docked') }}"
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ is_state(the_vacuum, 'Cleaning') }}"
+        then:
+          - set_conversation_response: Vacuum is already vacuuming.
+        else:
+          - set_conversation_response: Vacuum is not ready to vacuum.
+    else:
+      - action: input_text.set_value
+        metadata: {}
+        data:
+          value: ""
+        target:
+          entity_id: input_text.selected_vacuum_room_regions
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 1
+        alias: Wait 1 second so we don't have race conditions.
+      - variables:
+          valid_rooms: >-
+            {% set prompt=trigger.slots.rooms %} {% set
+            x=namespace(prompt=prompt|lower) %} {% set rooms_to_clean =
+            namespace(rooms=[]) %} {% set room_list = state_attr(the_vacuum,
+            'rooms')[state_attr(the_vacuum, 'selected_map')] %} {% if room_list
+            and room_list %}
+              {% set sorted_rooms = room_list | sort(attribute='name', reverse=true, case_sensitive=false) %}
+              {% for room in sorted_rooms %}
+                {% set room_name_lower = room['name'] | lower %}
+                {% if room_name_lower in x.prompt %}
+                  {% set rooms_to_clean.rooms = rooms_to_clean.rooms + [room] %}
+                  {% set x.prompt = x.prompt.replace(room_name_lower, '', 1) %}
+                {% endif %}
+              {% endfor %}
+              {{ rooms_to_clean.rooms }}
+            {% else %}
+              []
+            {% endif %}
+      - if:
+          - condition: template
+            value_template: "{{ valid_rooms | count == 0 }}"
+        then:
+          - set_conversation_response: No valid rooms for cleaning.
+        else:
+          - repeat:
+              sequence:
+                - action: script.dreame_add_segment_to_list
+                  metadata: {}
+                  data:
+                    segment_id: "{{ repeat.item.id }}"
+              for_each: "{{ valid_rooms|list }}"
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 1
+            enabled: true
+          - set_conversation_response: >-
+              Cleaning started - {{ ",
+              ".join(valid_rooms|map(attribute='name')|list) }}
+            enabled: true
+          - action: dreame_vacuum.vacuum_clean_segment
+            target:
+              entity_id: "{{the_vacuum}}"
+            data:
+              segments: "[{{ states('input_text.selected_vacuum_room_regions') }}]"
+            enabled: true
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 1
+            enabled: true
+          - action: input_text.set_value
+            metadata: {}
+            data:
+              value: ""
+            target:
+              entity_id: input_text.selected_vacuum_room_regions
+mode: restart
