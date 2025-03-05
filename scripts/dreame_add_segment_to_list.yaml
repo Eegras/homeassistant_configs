@@ -1,0 +1,32 @@
+sequence:
+  - variables:
+      new_value: >-
+        {%- set ns=namespace(x=[]) -%} {%- set
+        already_selected=states('input_text.selected_vacuum_room_regions').split(",")
+        -%} {%- if already_selected -%}
+          {%- for room in already_selected -%}
+            {%- if room|string not in ns.x and room|string not in ("", ",","\n") -%}
+              {%- set ns.x=ns.x + [room|int|string] -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%} {%- if segment_id|string not in ns.x -%}
+          {%- set ns.x=ns.x + [segment_id|int|string] -%}
+        {%- endif -%} {{ ",".join(ns.x) }}
+  - action: input_text.set_value
+    metadata: {}
+    data:
+      value: "{{ new_value }}"
+    target:
+      entity_id: input_text.selected_vacuum_room_regions
+  - variables:
+      result:
+        rooms: "{{ states('input_text.selected_vacuum_room_regions') }}"
+  - stop: ""
+    response_variable: result
+fields:
+  segment_id:
+    selector:
+      text: null
+    name: segment_id
+alias: Dreame Add Segment to List
+description: ""
